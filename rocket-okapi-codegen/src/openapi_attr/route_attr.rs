@@ -169,9 +169,20 @@ fn trim_angle_brackers(mut s: String) -> String {
 }
 
 fn parse_attr(name: &str, args: &[NestedMeta]) -> Result<Route, Error> {
-    match Method::from_str(name) {
-        Ok(method) => parse_method_route_attr(method, args),
-        Err(()) => parse_route_attr(args),
+    // Handle protect_* methods by extracting the underlying HTTP method
+    if let Some(method_str) = name.strip_prefix("protect_") {
+        match Method::from_str(method_str) {
+            Ok(method) => parse_method_route_attr(method, args),
+            Err(()) => return Err(Error::unsupported_format(&format!(
+                "Unknown HTTP method in protect macro: '{}'",
+                method_str
+            ))),
+        }
+    } else {
+        match Method::from_str(name) {
+            Ok(method) => parse_method_route_attr(method, args),
+            Err(()) => parse_route_attr(args),
+        }
     }
 }
 
@@ -186,6 +197,12 @@ fn is_route_attribute(a: &Attribute) -> bool {
         || a.path.is_ident("connect")
         || a.path.is_ident("patch")
         || a.path.is_ident("route")
+        || a.path.is_ident("protect_get")
+        || a.path.is_ident("protect_put")
+        || a.path.is_ident("protect_post")
+        || a.path.is_ident("protect_delete")
+        || a.path.is_ident("protect_patch")
+        || a.path.is_ident("protect_options")
 }
 
 fn to_name_and_args(attr: &Attribute) -> Option<(String, Vec<NestedMeta>)> {
