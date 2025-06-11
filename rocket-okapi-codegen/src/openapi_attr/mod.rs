@@ -320,7 +320,11 @@ fn create_route_operation_fn(
         None => quote! { operation_id },
     };
 
-    TokenStream::from(quote! {
+    // eprintln!(
+    //     "Creating OpenAPI operation for `{}` with method `{}`. fn name: `{}`",
+    //     path, route.method, fn_name
+    // );
+    let generated_function = TokenStream::from(quote! {
         #[doc(hidden)]
         pub fn #fn_name(
             gen: &mut ::rocket_okapi::gen::OpenApiGenerator,
@@ -413,7 +417,9 @@ fn create_route_operation_fn(
             });
             Ok(())
         }
-    })
+    });
+    // eprintln!("create function: {}", generated_function.to_string());
+    generated_function
 }
 
 fn unit_type() -> Type {

@@ -105,10 +105,20 @@ impl FromMeta for MethodMeta {
     fn from_string(value: &str) -> Result<Self, Error> {
         match Method::from_str(value) {
             Ok(m) => Ok(MethodMeta(m)),
-            Err(()) => Err(Error::unsupported_format(&format!(
-                "Unknown HTTP method: '{}'",
-                value
-            ))),
+            Err(()) => {
+                // Special handling for paths that might be incorrectly parsed as methods
+                // This helps with rust-analyzer false positives for protect_* macros
+                if value.starts_with('/') {
+                    Err(Error::unsupported_format(
+                        "Expected HTTP method but found a path. This might be a rust-analyzer parsing issue with protect_* macros."
+                    ))
+                } else {
+                    Err(Error::unsupported_format(&format!(
+                        "Unknown HTTP method: '{}'",
+                        value
+                    )))
+                }
+            }
         }
     }
 }
@@ -136,6 +146,18 @@ fn parse_route_attr(args: &[NestedMeta]) -> Result<Route, Error> {
     if args.is_empty() {
         return Err(Error::too_few_items(1));
     }
+
+    // Defensive check: if the first argument looks like a path, this might be a protect_* macro
+    // being incorrectly parsed. This helps with rust-analyzer false positives.
+    if let Some(NestedMeta::Lit(syn::Lit::Str(lit_str))) = args.first() {
+        let value = lit_str.value();
+        if value.starts_with('/') {
+            return Err(Error::unsupported_format(
+                "This appears to be a protect_* macro being parsed incorrectly. This is likely a rust-analyzer issue and should not affect compilation."
+            ));
+        }
+    }
+
     let method = MethodMeta::from_nested_meta(&args[0])?;
     let named = RouteAttributeNamedMeta::from_list(&args[1..])?;
     Ok(Route {
@@ -173,10 +195,12 @@ fn parse_attr(name: &str, args: &[NestedMeta]) -> Result<Route, Error> {
     if let Some(method_str) = name.strip_prefix("protect_") {
         match Method::from_str(method_str) {
             Ok(method) => parse_method_route_attr(method, args),
-            Err(()) => return Err(Error::unsupported_format(&format!(
-                "Unknown HTTP method in protect macro: '{}'",
-                method_str
-            ))),
+            Err(()) => {
+                return Err(Error::unsupported_format(&format!(
+                    "Unknown HTTP method in protect macro: '{}'",
+                    method_str
+                )))
+            }
         }
     } else {
         match Method::from_str(name) {

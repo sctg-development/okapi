@@ -45,6 +45,7 @@ pub fn create_openapi_spec(routes: TokenStream) -> Result<TokenStream2> {
 fn create_add_operations(paths: Punctuated<Path, Comma>) -> TokenStream2 {
     let function_calls = paths.into_iter().map(|path| {
         let fn_name = fn_name_for_add_operation(path.clone());
+        
         let operation_id = operation_id(&path);
         quote! {
             #fn_name(&mut gen, #operation_id.to_owned())
