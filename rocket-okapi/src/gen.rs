@@ -4,8 +4,8 @@ use okapi::openapi3::{Components, OpenApi, Operation, PathItem, RefOr, SecurityS
 use okapi::{Map, MapEntry};
 use rocket::http::Method;
 use schemars::generate::SchemaGenerator;
-use schemars::Schema as SchemaObject;
 use schemars::JsonSchema;
+use schemars::Schema as SchemaObject;
 use std::collections::HashMap;
 
 /// A struct that visits all `rocket::Route`s, and aggregates information about them.
