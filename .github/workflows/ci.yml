@@ -36,12 +36,6 @@ jobs:
         run: cargo fmt -- --check
       - name: Linting
         run: cargo clippy -- -D warnings
-      - name: Audit
-        run: |
-          cargo update
-          cargo audit
-        # Allowed to fail but this will notify us that some dependency might need an update.
-        continue-on-error: true
 
       # Run code coverage
       - name: Run code coverage

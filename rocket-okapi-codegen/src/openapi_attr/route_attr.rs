@@ -333,9 +333,9 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
         }
     } else if name == "route" {
         // route macro: first arg could be method string? Not handling for now.
-        return Err(Error::unsupported_format(
+        Err(Error::unsupported_format(
             "'route' attribute parsing not implemented",
-        ));
+        ))
     } else {
         match Method::from_str(&name) {
             Ok(m) => {
@@ -345,18 +345,16 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
                         .map_err(|e| Error::unsupported_format(&e.to_string()))?,
                     None => return Err(Error::too_few_items(1)),
                 };
-                return Ok(Route {
+                Ok(Route {
                     method: m,
                     origin,
                     media_type,
                     data_param: data_param.map(trim_angle_brackers),
-                });
+                })
             }
-            Err(()) => {
-                return Err(Error::unsupported_format(&format!(
-                    "Unknown HTTP method: '{name}'"
-                )))
-            }
+            Err(()) => Err(Error::unsupported_format(&format!(
+                "Unknown HTTP method: '{name}'"
+            ))),
         }
     }
 }
