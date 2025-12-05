@@ -61,7 +61,7 @@ pub fn create_server() -> Rocket<Build> {
 fn custom_openapi_spec() -> OpenApi {
     use rocket_okapi::okapi::map;
     use rocket_okapi::okapi::openapi3::*;
-    use rocket_okapi::okapi::schemars::schema::*;
+    use serde_json::json;
     OpenApi {
         openapi: OpenApi::default_version(),
         info: Info {
@@ -111,12 +111,7 @@ fn custom_openapi_spec() -> OpenApi {
                             description: "Return the page, no error.".to_owned(),
                             content: map!{
                                 "text/html".to_owned() => MediaType{
-                                schema: Some(SchemaObject{
-                                    instance_type: Some(SingleOrVec::Single(Box::new(
-                                        InstanceType::String
-                                    ))),
-                                    ..Default::default()
-                                }),
+                                schema: Some(json!({ "type": "string" }).try_into().expect("invalid schema")),
                                 ..Default::default()
                                 }
                             },

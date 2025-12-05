@@ -7,22 +7,39 @@ env:
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build
-    - name: Run tests
-      run: cargo test
-    - name: Format
-      run: cargo fmt -- --check
-    - name: Linting
-      run: cargo clippy -- -D warnings
-    - name: Audit
-      run: |
-        cargo update
-        cargo audit
-      # Allowed to fail but this will notify us that some dependency might need an update.
-      continue-on-error: true
+      - uses: actions/checkout@v6
+      - name: Build
+        run: cargo build
+      - name: Run tests
+        run: cargo test
+      - name: Format
+        run: cargo fmt -- --check
+      - name: Linting
+        run: cargo clippy -- -D warnings
+      - name: Audit
+        run: |
+          cargo update
+          cargo audit
+        # Allowed to fail but this will notify us that some dependency might need an update.
+        continue-on-error: true
+
+      # Run code coverage on Linux only
+      - name: Run code coverage
+        continue-on-error: true
+        shell: bash
+        run: |
+          cargo install cargo-tarpaulin
+          cargo tarpaulin --out Xml --output-dir . 
+          ls -la cobertura.xml
+
+      # Upload coverage to Codecov
+      - name: Upload coverage to Codecov
+        continue-on-error: true
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./cobertura.xml
+          slug: sctg-development/okapi
+          token: ${{ secrets.CODECOV_TOKEN }}

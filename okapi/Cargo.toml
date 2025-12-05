@@ -1,9 +1,12 @@
 [package]
 name = "okapi"
 description = "Structs for OpenAPI (AKA Swagger) documents"
-repository = "https://github.com/GREsau/okapi"
-version = "0.7.0"
-authors = ["Graham Esau <gesau@hotmail.co.uk>"]
+repository = "https://github.com/sctg-development/okapi"
+version = "0.8.0"
+authors = [
+    "Graham Esau <gesau@hotmail.co.uk>",
+    "Ronan Le Meillat - SCTG Development",
+]
 edition = "2021"
 license = "MIT"
 readme = "../README.md"
@@ -11,15 +14,16 @@ keywords = ["rust", "openapi", "swagger"]
 categories = ["web-programming"]
 
 [dependencies]
-schemars = { workspace = true }
+schemars = "1.1.0"
+indexmap = { version = "2.12.1", features = ["serde"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 log = { workspace = true }
 
+# Features mapping for schemars 1.1.0
+# Implements `JsonSchema` for `Schemars` and `Okapi` types themselves by enabling the derive
 [features]
-# Implements `JsonSchema` for `Schemars` and `Okapi` types themselves.
-impl_json_schema = ["schemars/impl_json_schema"]
-# Preserve the order of items in schema and other part of the OpenAPI documentation.
+impl_json_schema = ["schemars/derive"]
 preserve_order = ["schemars/preserve_order"]
 
 [package.metadata.docs.rs]

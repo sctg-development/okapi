@@ -11,9 +11,12 @@ use rocket_http::Method;
 use std::collections::BTreeMap as Map;
 use syn::ext::IdentExt;
 use syn::{
-    parse_macro_input, AttributeArgs, FnArg, GenericArgument, Ident, ItemFn, PathArguments,
+    parse_macro_input, FnArg, GenericArgument, Ident, ItemFn, PathArguments,
     PathSegment, ReturnType, Type, TypeTuple,
 };
+use syn::punctuated::Punctuated;
+use syn::token::Comma;
+use darling::ast::NestedMeta as DarlingNestedMeta;
 
 /// This structure documents all the properties that can be used in
 /// the `#[openapi]` derive macro. for example: `#[openapi(tag = "Users")]`
@@ -43,10 +46,13 @@ struct OpenApiAttribute {
 }
 
 pub fn parse(args: TokenStream, input: TokenStream) -> TokenStream {
-    let attr_args = parse_macro_input!(args as AttributeArgs);
+    // The `darling::ast::NestedMeta` is not trivially `Parse`-able with syn 2.0. Instead,
+    // parse the args token stream into a string and do minimal parsing for the set
+    // of attributes we support for the #[openapi] macro to keep things simple.
+    let args_string = args.to_string();
     let input = parse_macro_input!(input as ItemFn);
 
-    let entry_attributes = match OpenApiAttribute::from_list(&attr_args) {
+    let entry_attributes = match parse_openapi_args_from_string(&args_string) {
         Ok(v) => v,
         Err(e) => {
             return e.write_errors().into();
@@ -61,6 +67,40 @@ pub fn parse(args: TokenStream, input: TokenStream) -> TokenStream {
         Ok(route) => create_route_operation_fn(input, route, &entry_attributes),
         Err(e) => e,
     }
+}
+
+fn parse_openapi_args_from_string(s: &str) -> Result<OpenApiAttribute, darling::Error> {
+    let mut attr = OpenApiAttribute::default();
+    if s.trim().is_empty() {
+        return Ok(attr);
+    }
+    for part in s.split(',') {
+        let part = part.trim();
+        if part == "skip" {
+            attr.skip = true;
+            continue;
+        }
+        if part == "deprecated" {
+            attr.deprecated = true;
+            continue;
+        }
+        if let Some(rest) = part.strip_prefix("tag =") {
+            let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
+            attr.tags.push(val.to_string());
+            continue;
+        }
+        if let Some(rest) = part.strip_prefix("operation_id =") {
+            let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
+            attr.operation_id = Some(val.to_string());
+            continue;
+        }
+        if let Some(rest) = part.strip_prefix("ignore =") {
+            let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
+            attr.ignore.push(val.to_string());
+            continue;
+        }
+    }
+    Ok(attr)
 }
 
 fn create_empty_route_operation_fn(route_fn: ItemFn) -> TokenStream {

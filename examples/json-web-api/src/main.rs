@@ -13,7 +13,7 @@ struct User {
     user_id: u64,
     /// The current username of the user.
     username: String,
-    #[schemars(example = "example_email")]
+    #[schemars(example = example_email())]
     email: Option<String>,
 }
 

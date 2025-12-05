@@ -16,6 +16,12 @@ This project follows the [Semantic Versioning standard](https://semver.org/).
 
 ### Security
 
+## Version 0.8.0 (2025-12-05)
+
+### Changed
+- Updated `schemars` dependency to 1.1.0 and migrated public API usage.
+- Adjusted examples and `JsonSchema` derivations to the new schemars' public `Schema` usage.
+
 ## Version 0.7.0 (2024-01-14)
 
 ### Added

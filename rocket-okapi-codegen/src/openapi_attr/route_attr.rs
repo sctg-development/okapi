@@ -4,7 +4,12 @@ use quote::{quote, quote_spanned};
 use rocket_http::{ext::IntoOwned, uri::Origin, MediaType, Method};
 use std::str::FromStr;
 use syn::spanned::Spanned;
-use syn::{Attribute, Meta, MetaList, NestedMeta};
+use syn::{Attribute, Meta, MetaList};
+use syn::ext::IdentExt;
+use darling::ast::NestedMeta as DarlingNestedMeta;
+use quote::ToTokens;
+use syn::punctuated::Punctuated;
+use syn::token::Comma;
 
 #[derive(Debug)]
 pub struct Route {
@@ -142,14 +147,14 @@ struct MethodRouteAttributeNamedMeta {
     data: Option<String>,
 }
 
-fn parse_route_attr(args: &[NestedMeta]) -> Result<Route, Error> {
+fn parse_route_attr(args: &[DarlingNestedMeta]) -> Result<Route, Error> {
     if args.is_empty() {
         return Err(Error::too_few_items(1));
     }
 
     // Defensive check: if the first argument looks like a path, this might be a protect_* macro
     // being incorrectly parsed. This helps with rust-analyzer false positives.
-    if let Some(NestedMeta::Lit(syn::Lit::Str(lit_str))) = args.first() {
+    if let Some(DarlingNestedMeta::Lit(syn::Lit::Str(lit_str))) = args.first() {
         let value = lit_str.value();
         if value.starts_with('/') {
             return Err(Error::unsupported_format(
@@ -168,7 +173,7 @@ fn parse_route_attr(args: &[NestedMeta]) -> Result<Route, Error> {
     })
 }
 
-fn parse_method_route_attr(method: Method, args: &[NestedMeta]) -> Result<Route, Error> {
+fn parse_method_route_attr(method: Method, args: &[DarlingNestedMeta]) -> Result<Route, Error> {
     if args.is_empty() {
         return Err(Error::too_few_items(1));
     }
@@ -190,7 +195,7 @@ fn trim_angle_brackers(mut s: String) -> String {
     s
 }
 
-fn parse_attr(name: &str, args: &[NestedMeta]) -> Result<Route, Error> {
+fn parse_attr(name: &str, args: &[DarlingNestedMeta]) -> Result<Route, Error> {
     // Handle protect_* methods by extracting the underlying HTTP method
     if let Some(method_str) = name.strip_prefix("protect_") {
         match Method::from_str(method_str) {
@@ -211,30 +216,126 @@ fn parse_attr(name: &str, args: &[NestedMeta]) -> Result<Route, Error> {
 }
 
 fn is_route_attribute(a: &Attribute) -> bool {
-    a.path.is_ident("get")
-        || a.path.is_ident("put")
-        || a.path.is_ident("post")
-        || a.path.is_ident("delete")
-        || a.path.is_ident("options")
-        || a.path.is_ident("head")
-        || a.path.is_ident("trace")
-        || a.path.is_ident("connect")
-        || a.path.is_ident("patch")
-        || a.path.is_ident("route")
-        || a.path.is_ident("protect_get")
-        || a.path.is_ident("protect_put")
-        || a.path.is_ident("protect_post")
-        || a.path.is_ident("protect_delete")
-        || a.path.is_ident("protect_patch")
-        || a.path.is_ident("protect_options")
+    a.path().is_ident("get")
+           || a.path().is_ident("put")
+        || a.path().is_ident("post")
+        || a.path().is_ident("delete")
+        || a.path().is_ident("options")
+        || a.path().is_ident("head")
+        || a.path().is_ident("trace")
+        || a.path().is_ident("connect")
+        || a.path().is_ident("patch")
+        || a.path().is_ident("route")
+        || a.path().is_ident("protect_get")
+        || a.path().is_ident("protect_put")
+        || a.path().is_ident("protect_post")
+        || a.path().is_ident("protect_delete")
+        || a.path().is_ident("protect_patch")
+        || a.path().is_ident("protect_options")
 }
 
-fn to_name_and_args(attr: &Attribute) -> Option<(String, Vec<NestedMeta>)> {
-    match attr.parse_meta() {
-        Ok(Meta::List(MetaList { path, nested, .. })) => path
-            .get_ident()
-            .map(|name| (name.to_string(), nested.into_iter().collect())),
-        _ => None,
+fn extract_inner_args_string(attr: &Attribute) -> Option<String> {
+    // Convert attribute meta to a token string and extract content inside parentheses
+    let s = attr.meta.to_token_stream().to_string();
+    if let Some(start) = s.find('(') {
+        if let Some(end) = s.rfind(')') {
+            return Some(s[start + 1..end].to_string());
+        }
+    }
+    None
+}
+
+fn parse_args_string_to_parts(s: &str) -> Vec<String> {
+    // Split on commas at top-level, respecting strings inside quotes
+    let mut parts = Vec::new();
+    let mut current = String::new();
+    let mut in_quotes = false;
+    let mut escape = false;
+    for c in s.chars() {
+        if escape {
+            current.push(c);
+            escape = false;
+            continue;
+        }
+        if c == '\\' {
+            escape = true;
+            current.push(c);
+            continue;
+        }
+        if c == '"' {
+            in_quotes = !in_quotes;
+            current.push(c);
+            continue;
+        }
+        if c == ',' && !in_quotes {
+            parts.push(current.trim().to_string());
+            current.clear();
+        } else {
+            current.push(c);
+        }
+    }
+    if !current.trim().is_empty() {
+        parts.push(current.trim().to_string());
+    }
+    parts
+}
+
+fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
+    let name = attr.path().get_ident().map(|id| id.to_string()).unwrap_or_default();
+    let args_str = extract_inner_args_string(attr).unwrap_or_default();
+    let parts = parse_args_string_to_parts(&args_str);
+    // Simple parsing rules: first positional argument that's a string is the path
+    let mut path: Option<String> = None;
+    let mut media_type: Option<MediaType> = None;
+    let mut data_param: Option<String> = None;
+    for part in parts.iter() {
+        if part.starts_with('"') && part.ends_with('"') {
+            if path.is_none() {
+                path = Some(part.trim_matches('"').to_string());
+                continue;
+            }
+        }
+        if let Some(rest) = part.strip_prefix("format =") {
+            let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
+            match MediaType::parse_flexible(val) {
+                Some(m) => media_type = Some(m),
+                None => return Err(Error::unsupported_format(&format!("Unknown media type: '{}'", val))),
+            }
+            continue;
+        }
+        if let Some(rest) = part.strip_prefix("data =") {
+            let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
+            data_param = Some(val.to_string());
+            continue;
+        }
+    }
+    // Method
+    if let Some(method) = name.strip_prefix("protect_") {
+        // protect_* macro
+        match Method::from_str(method) {
+            Ok(m) => {
+                let origin = match path {
+                    Some(p) => Origin::parse_route(&p).map(|o| o.into_owned()).map_err(|e| Error::unsupported_format(&e.to_string()))?,
+                    None => return Err(Error::too_few_items(1)),
+                };
+                return Ok(Route { method: m, origin, media_type, data_param: data_param.map(trim_angle_brackers) });
+            }
+            Err(()) => return Err(Error::unsupported_format(&format!("Unknown HTTP method in protect macro: '{}'", method))),
+        }
+    } else if name == "route" {
+        // route macro: first arg could be method string? Not handling for now.
+        return Err(Error::unsupported_format("'route' attribute parsing not implemented"));
+    } else {
+        match Method::from_str(&name) {
+            Ok(m) => {
+                let origin = match path {
+                    Some(p) => Origin::parse_route(&p).map(|o| o.into_owned()).map_err(|e| Error::unsupported_format(&e.to_string()))?,
+                    None => return Err(Error::too_few_items(1)),
+                };
+                return Ok(Route { method: m, origin, media_type, data_param: data_param.map(trim_angle_brackers) });
+            }
+            Err(()) => return Err(Error::unsupported_format(&format!("Unknown HTTP method: '{}'", name))),
+        }
     }
 }
 
@@ -244,12 +345,7 @@ pub(crate) fn parse_attrs<'a>(
     match attrs.into_iter().find(|a| is_route_attribute(a)) {
         Some(attr) => {
             let span = attr.span();
-            let (name, args) = to_name_and_args(attr)
-                .ok_or_else(|| TokenStream::from(quote_spanned! {span=>
-                    compile_error!("Malformed route attribute");
-                }))?;
-
-            parse_attr(&name, &args)
+            parse_attr_from_attr(attr)
                 .map_err(|e| e.with_span(&attr).write_errors().into())
         }
         None => Err(quote! {

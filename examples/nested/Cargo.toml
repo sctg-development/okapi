@@ -12,3 +12,4 @@ rocket = { workspace = true }
 rocket_okapi = { path = "../../rocket-okapi", features = ["rapidoc"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+schemars = "1.1.0"

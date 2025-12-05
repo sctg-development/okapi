@@ -1,9 +1,12 @@
 [package]
 name = "rocket_okapi"
 description = "OpenAPI (AKA Swagger) document generation for Rocket applications"
-repository = "https://github.com/GREsau/okapi"
-version = "0.9.0"
-authors = ["Graham Esau <gesau@hotmail.co.uk>"]
+repository = "https://github.com/sctg-development/okapi"
+version = "0.10.0"
+authors = [
+    "Graham Esau <gesau@hotmail.co.uk>",
+    "Ronan Le Meillat - SCTG Development",
+]
 edition = "2021"
 license = "MIT"
 readme = "../README.md"
@@ -12,9 +15,9 @@ categories = ["web-programming"]
 
 [dependencies]
 rocket = { workspace = true }
-schemars = { workspace = true }
-okapi = { version = "0.7.0", path = "../okapi" }
-rocket_okapi_codegen = { version = "=0.9.0", path = "../rocket-okapi-codegen" }
+schemars = "1.1.0"
+okapi = { version = "0.8.0", path = "../okapi" }
+rocket_okapi_codegen = { version = "=0.10.0", path = "../rocket-okapi-codegen" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }
@@ -41,7 +44,8 @@ swagger = []
 # Project: https://github.com/mrin9/RapiDoc
 rapidoc = []
 # Allow the use of UUIDs
-uuid = ["rocket/uuid", "schemars/uuid"]
+# Update to schemars 1.1 feature name 'uuid1'
+uuid = ["rocket/uuid", "schemars/uuid1"]
 # Re-export Rocket feature flag
 # https://docs.rs/rocket/latest/rocket/serde/msgpack/struct.MsgPack.html
 msgpack = ["rocket/msgpack"]

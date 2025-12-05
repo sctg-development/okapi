@@ -1,9 +1,12 @@
 [package]
 name = "rocket_okapi_codegen"
 description = "Macros supporting rocket_okapi"
-repository = "https://github.com/GREsau/okapi"
-version = "0.9.0"
-authors = ["Graham Esau <gesau@hotmail.co.uk>"]
+repository = "https://github.com/sctg-development/okapi"
+version = "0.10.0"
+authors = [
+    "Graham Esau <gesau@hotmail.co.uk>",
+    "Ronan Le Meillat - SCTG Development",
+]
 edition = "2021"
 license = "MIT"
 readme = "../README.md"
@@ -15,7 +18,7 @@ proc-macro = true
 
 [dependencies]
 rocket_http = { workspace = true }
-darling = "0.13"
-syn = "1.0"
+darling = "0.23.0"
+syn = "2.0.111"
 proc-macro2 = "1.0"
 quote = "1.0"

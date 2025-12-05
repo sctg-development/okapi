@@ -1,4 +1,4 @@
-use schemars::gen::SchemaSettings;
+use schemars::generate::SchemaSettings;
 use serde::{Deserialize, Serialize};
 
 /// Settings which are used to customize the behavior of the `OpenApiGenerator`.

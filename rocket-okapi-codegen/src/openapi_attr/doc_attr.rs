@@ -1,4 +1,5 @@
-use syn::{Attribute, Lit::Str, Meta::NameValue, MetaNameValue};
+use syn::{Attribute, Lit::Str, Meta::NameValue, MetaNameValue, Meta};
+use syn::ext::IdentExt;
 
 pub fn get_title_and_desc_from_doc(attrs: &[Attribute]) -> (Option<String>, Option<String>) {
     let doc = match get_doc(attrs) {
@@ -35,13 +36,14 @@ fn get_doc(attrs: &[Attribute]) -> Option<String> {
     let doc = attrs
         .iter()
         .filter_map(|attr| {
-            if !attr.path.is_ident("doc") {
+            if !attr.path().is_ident("doc") {
                 return None;
             }
-
-            let meta = attr.parse_meta().ok()?;
-            if let NameValue(MetaNameValue { lit: Str(s), .. }) = meta {
-                return Some(s.value());
+            let meta = &attr.meta;
+            if let NameValue(MetaNameValue { value: syn::Expr::Lit(expr_lit), .. }) = meta {
+                if let syn::Lit::Str(s) = &expr_lit.lit {
+                    return Some(s.value());
+                }
             }
 
             None

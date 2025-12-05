@@ -73,6 +73,12 @@ This project follows the [Semantic Versioning standard](https://semver.org/).
 This version also includes all the changes from `0.8.0-rc.1`, `0.8.0-rc.2` and `0.8.0-rc.3`.
 See below for more info on the changes made in these versions.
 
+## Version 0.10.0 (2025-12-05)
+
+### Changed
+- Updated `schemars` dependency to 1.1.0 and migrated public API usage in examples and internal code.
+- Bumped `okapi` dependency to 0.8.0 to reflect API changes and migration.
+
 ## Version 0.8.0-rc.3 (2023-05-29)
 
 ### Added

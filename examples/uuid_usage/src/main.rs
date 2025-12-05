@@ -7,10 +7,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 struct User {
-    #[schemars(example = "example_uuid")]
+    #[schemars(example = &"fdb12d51-0e3f-4ff8-821e-fbc255d8e413")]
     user_id: uuid::Uuid,
     username: String,
-    #[schemars(example = "example_email")]
+    #[schemars(example = &"test@example.com")]
     email: Option<String>,
 }
 

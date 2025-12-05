@@ -218,6 +218,10 @@ fn accept_either_schema(
         (None, None) => return None,
     };
     let mut schema = SchemaObject::default();
-    schema.subschemas().any_of = Some(vec![s1.into(), s2.into()]);
+    // Set an `anyOf` property with the two schemas
+    schema.insert(
+        "anyOf".to_owned(),
+        serde_json::Value::Array(vec![serde_json::Value::from(s1), serde_json::Value::from(s2)]),
+    );
     Some(schema)
 }

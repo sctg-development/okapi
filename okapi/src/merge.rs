@@ -206,7 +206,7 @@ pub fn merge_tags(s1: &mut Vec<Tag>, s2: &[Tag]) -> Result<Vec<Tag>, MergeError>
     // Code below works both for `BTreeMap` as for `IndexMap`.
     let keys: Vec<String> = new_tags.keys().cloned().collect();
     for key in keys {
-        if let Some(tag) = new_tags.remove(&key) {
+        if let Some(tag) = new_tags.shift_remove(&key) {
             new_tags_vec.push(tag);
         } else {
             unreachable!("List sizes or same list do not match.");

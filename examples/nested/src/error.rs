@@ -4,7 +4,7 @@ use rocket::{
     response::{self, Responder, Response},
 };
 use rocket_okapi::okapi::openapi3::Responses;
-use rocket_okapi::okapi::schemars::{self, Map};
+use rocket_okapi::okapi::Map;
 use rocket_okapi::{gen::OpenApiGenerator, response::OpenApiResponderInner, OpenApiError};
 
 /// Error messages returned to user

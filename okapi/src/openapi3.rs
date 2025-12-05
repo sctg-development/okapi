@@ -1,7 +1,7 @@
 use crate::Map;
-pub use schemars::schema::SchemaObject;
 #[cfg(feature = "impl_json_schema")]
 use schemars::JsonSchema;
+pub use schemars::Schema as SchemaObject;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

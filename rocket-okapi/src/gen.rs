@@ -3,8 +3,8 @@ use crate::OperationInfo;
 use okapi::openapi3::{Components, OpenApi, Operation, PathItem, RefOr, SecurityScheme};
 use okapi::{Map, MapEntry};
 use rocket::http::Method;
-use schemars::gen::SchemaGenerator;
-use schemars::schema::SchemaObject;
+use schemars::generate::SchemaGenerator;
+use schemars::Schema as SchemaObject;
 use schemars::JsonSchema;
 use std::collections::HashMap;
 
@@ -82,7 +82,7 @@ impl OpenApiGenerator {
     #[must_use]
     pub fn into_openapi(self) -> OpenApi {
         let mut schema_generator = self.schema_generator;
-        let mut schemas = schema_generator.take_definitions();
+        let schemas = schema_generator.take_definitions(true);
 
         // Add the security schemes
         let mut schemes: Map<String, RefOr<SecurityScheme>> = Default::default();
@@ -90,11 +90,7 @@ impl OpenApiGenerator {
             schemes.insert(name, schema.into());
         }
 
-        for visitor in schema_generator.visitors_mut() {
-            for schema in schemas.values_mut() {
-                visitor.visit_schema(schema)
-            }
-        }
+        // `take_definitions(true)` has already applied transforms; no need to manually call visitors
 
         OpenApi {
             openapi: "3.0.0".to_owned(),
@@ -109,7 +105,10 @@ impl OpenApiGenerator {
                 paths
             },
             components: Some(Components {
-                schemas: schemas.into_iter().map(|(k, v)| (k, v.into())).collect(),
+                schemas: schemas
+                    .into_iter()
+                    .map(|(k, v)| (k, v.try_into().unwrap()))
+                    .collect(),
                 security_schemes: schemes,
                 ..Default::default()
             }),
