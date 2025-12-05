@@ -59,7 +59,7 @@ fn test_merge_map_and_map_keys() {
 
 #[test]
 fn test_merge_tags_and_tag_merge() {
-    let mut t1 = Tag {
+    let t1 = Tag {
         name: "x".to_owned(),
         description: Some("a".to_owned()),
         ..Default::default()

@@ -79,6 +79,36 @@ pub(crate) fn create_openapi_spec_ts(routes: TokenStream2) -> Result<TokenStream
     })
 }
 
+fn create_add_operations(paths: Punctuated<Path, Comma>) -> TokenStream2 {
+    let function_calls = paths.into_iter().map(|path| {
+        let fn_name = fn_name_for_add_operation(path.clone());
+
+        let operation_id = operation_id(&path);
+        quote! {
+            #fn_name(&mut gen, #operation_id.to_owned())
+                .expect(&format!("Could not generate OpenAPI operation for `{}`.", stringify!(#path)));
+        }
+    });
+    quote! {
+        #(#function_calls)*
+    }
+}
+
+fn fn_name_for_add_operation(mut fn_path: Path) -> Path {
+    let last_seg = fn_path.segments.last_mut().expect("syn::Path has segments");
+    last_seg.ident = get_add_operation_fn_name(&last_seg.ident);
+    fn_path
+}
+
+fn operation_id(fn_path: &Path) -> String {
+    let idents: Vec<String> = fn_path
+        .segments
+        .iter()
+        .map(|s| s.ident.to_string())
+        .collect();
+    idents.join("_")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,37 +148,7 @@ mod tests {
         let ts: TS2 = quote!(crate::a);
         let tokens = create_openapi_spec_ts(ts).expect("should generate spec closure");
         let out = tokens.to_string();
-        assert!(out.len() > 0);
+        assert!(!out.is_empty());
         assert!(out.contains("spec"));
     }
-}
-
-fn create_add_operations(paths: Punctuated<Path, Comma>) -> TokenStream2 {
-    let function_calls = paths.into_iter().map(|path| {
-        let fn_name = fn_name_for_add_operation(path.clone());
-
-        let operation_id = operation_id(&path);
-        quote! {
-            #fn_name(&mut gen, #operation_id.to_owned())
-                .expect(&format!("Could not generate OpenAPI operation for `{}`.", stringify!(#path)));
-        }
-    });
-    quote! {
-        #(#function_calls)*
-    }
-}
-
-fn fn_name_for_add_operation(mut fn_path: Path) -> Path {
-    let last_seg = fn_path.segments.last_mut().expect("syn::Path has segments");
-    last_seg.ident = get_add_operation_fn_name(&last_seg.ident);
-    fn_path
-}
-
-fn operation_id(fn_path: &Path) -> String {
-    let idents: Vec<String> = fn_path
-        .segments
-        .iter()
-        .map(|s| s.ident.to_string())
-        .collect();
-    idents.join("_")
 }

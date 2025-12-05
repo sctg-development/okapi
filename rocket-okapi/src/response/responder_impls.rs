@@ -120,7 +120,7 @@ impl OpenApiResponderInner for Value {
     fn responses(_gen: &mut OpenApiGenerator) -> Result {
         let mut responses = Responses::default();
         let schema = schemars::Schema::from(true);
-        add_schema_response(&mut responses, 200, "application/json", schema.into())?;
+        add_schema_response(&mut responses, 200, "application/json", schema)?;
         Ok(responses)
     }
 }

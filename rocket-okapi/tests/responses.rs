@@ -4,12 +4,10 @@ use okapi::openapi3::RefOr;
 use okapi::openapi3::Responses;
 use rocket::fs::NamedFile;
 use rocket::response::content::RawXml;
-use rocket::response::stream::{ByteStream, ReaderStream};
-use rocket::serde::json::Json;
+use rocket::response::stream::ByteStream;
 use rocket_okapi::gen::OpenApiGenerator;
 use rocket_okapi::response::OpenApiResponderInner;
 use rocket_okapi::settings::OpenApiSettings;
-use schemars::JsonSchema;
 use std::sync::Arc;
 
 #[test]

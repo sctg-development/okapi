@@ -18,7 +18,7 @@ fn get_data(req_body: Json<String>) -> Option<Json<()>> {
 #[openapi]
 #[get("/paths/<path..>")]
 fn path_info(path: PathBuf) -> (rocket::http::Status, String) {
-    (rocket::http::Status::ImATeapot, format!("info {:?}", path))
+    (rocket::http::Status::ImATeapot, format!("info {path:?}"))
 }
 
 #[openapi(tag = "Users")]
@@ -71,6 +71,6 @@ async fn main() {
         .await;
     match launch_result {
         Ok(_) => println!("Rocket shut down gracefully."),
-        Err(err) => println!("Rocket had an error: {}", err),
+        Err(err) => println!("Rocket had an error: {err}"),
     };
 }

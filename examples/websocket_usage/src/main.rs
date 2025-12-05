@@ -48,7 +48,7 @@ fn test_websocket() -> RawHtml<&'static str> {
 fn hello(ws: rocket_ws::WebSocket, name: &str) -> rocket_ws::Channel<'_> {
     ws.channel(move |mut stream| {
         Box::pin(async move {
-            let message = format!("Hello, {}!", name);
+            let message = format!("Hello, {name}!");
             let _ = stream.send(message.into()).await;
             Ok(())
         })
@@ -100,6 +100,6 @@ async fn main() {
         .await;
     match launch_result {
         Ok(_) => println!("Rocket shut down gracefully."),
-        Err(err) => println!("Rocket had an error: {}", err),
+        Err(err) => println!("Rocket had an error: {err}"),
     };
 }

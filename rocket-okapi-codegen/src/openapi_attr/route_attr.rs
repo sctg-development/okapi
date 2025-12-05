@@ -96,8 +96,7 @@ impl FromMeta for MediaTypeMeta {
         match MediaType::parse_flexible(value) {
             Some(m) => Ok(MediaTypeMeta(m)),
             None => Err(Error::unsupported_format(&format!(
-                "Unknown media type: '{}'",
-                value
+                "Unknown media type: '{value}'"
             ))),
         }
     }
@@ -116,8 +115,7 @@ impl FromMeta for MethodMeta {
                     ))
                 } else {
                     Err(Error::unsupported_format(&format!(
-                        "Unknown HTTP method: '{}'",
-                        value
+                        "Unknown HTTP method: '{value}'"
                     )))
                 }
             }
@@ -197,12 +195,9 @@ fn parse_attr(name: &str, args: &[DarlingNestedMeta]) -> Result<Route, Error> {
     if let Some(method_str) = name.strip_prefix("protect_") {
         match Method::from_str(method_str) {
             Ok(method) => parse_method_route_attr(method, args),
-            Err(()) => {
-                return Err(Error::unsupported_format(&format!(
-                    "Unknown HTTP method in protect macro: '{}'",
-                    method_str
-                )))
-            }
+            Err(()) => Err(Error::unsupported_format(&format!(
+                "Unknown HTTP method in protect macro: '{method_str}'"
+            ))),
         }
     } else {
         match Method::from_str(name) {
@@ -290,11 +285,9 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
     let mut media_type: Option<MediaType> = None;
     let mut data_param: Option<String> = None;
     for part in parts.iter() {
-        if part.starts_with('"') && part.ends_with('"') {
-            if path.is_none() {
-                path = Some(part.trim_matches('"').to_string());
-                continue;
-            }
+        if part.starts_with('"') && part.ends_with('"') && path.is_none() {
+            path = Some(part.trim_matches('"').to_string());
+            continue;
         }
         if let Some(rest) = part.strip_prefix("format =") {
             let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
@@ -302,8 +295,7 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
                 Some(m) => media_type = Some(m),
                 None => {
                     return Err(Error::unsupported_format(&format!(
-                        "Unknown media type: '{}'",
-                        val
+                        "Unknown media type: '{val}'"
                     )))
                 }
             }
@@ -326,19 +318,16 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
                         .map_err(|e| Error::unsupported_format(&e.to_string()))?,
                     None => return Err(Error::too_few_items(1)),
                 };
-                return Ok(Route {
+                Ok(Route {
                     method: m,
                     origin,
                     media_type,
                     data_param: data_param.map(trim_angle_brackers),
-                });
+                })
             }
-            Err(()) => {
-                return Err(Error::unsupported_format(&format!(
-                    "Unknown HTTP method in protect macro: '{}'",
-                    method
-                )))
-            }
+            Err(()) => Err(Error::unsupported_format(&format!(
+                "Unknown HTTP method in protect macro: '{method}'"
+            ))),
         }
     } else if name == "route" {
         // route macro: first arg could be method string? Not handling for now.
@@ -363,8 +352,7 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
             }
             Err(()) => {
                 return Err(Error::unsupported_format(&format!(
-                    "Unknown HTTP method: '{}'",
-                    name
+                    "Unknown HTTP method: '{name}'"
                 )))
             }
         }
@@ -406,7 +394,7 @@ mod tests {
     fn test_extract_inner_args_string() {
         let item: syn::ItemFn = parse_str("#[get(\"/a\")] fn f() {} ").unwrap();
         let attr = item.attrs.first().unwrap();
-        let out = extract_inner_args_string(&attr).unwrap();
+        let out = extract_inner_args_string(attr).unwrap();
         assert_eq!(out, "\"/a\"");
     }
 
@@ -414,17 +402,17 @@ mod tests {
     fn test_is_route_attribute_get_and_protect() {
         let a: syn::ItemFn = parse_str("#[get(\"/a\")] fn f() {} ").unwrap();
         let a_attr = a.attrs.first().unwrap();
-        assert!(is_route_attribute(&a_attr));
+        assert!(is_route_attribute(a_attr));
         let b: syn::ItemFn = parse_str("#[protect_get(\"/a\")] fn f() {} ").unwrap();
         let b_attr = b.attrs.first().unwrap();
-        assert!(is_route_attribute(&b_attr));
+        assert!(is_route_attribute(b_attr));
     }
 
     #[test]
     fn test_parse_attr_from_attr_get_success() {
         let a: syn::ItemFn = parse_str("#[get(\"/user/<id>?<q>\")] fn f() {} ").unwrap();
         let a_attr = a.attrs.first().unwrap();
-        let r = parse_attr_from_attr(&a_attr).unwrap();
+        let r = parse_attr_from_attr(a_attr).unwrap();
         assert_eq!(r.method, Method::Get);
         assert!(r.origin.path().as_str().contains("/user/<id>"));
         assert!(r.path_params().any(|p| p == "id"));
@@ -436,7 +424,7 @@ mod tests {
         let a: syn::ItemFn =
             parse_str("#[protect_get(\"/api/<a>\", data = \"<param>\")] fn f() {} ").unwrap();
         let a_attr = a.attrs.first().unwrap();
-        let r = parse_attr_from_attr(&a_attr).unwrap();
+        let r = parse_attr_from_attr(a_attr).unwrap();
         assert_eq!(r.method, Method::Get);
         assert_eq!(r.data_param.as_deref(), Some("param"));
     }
@@ -445,7 +433,7 @@ mod tests {
     fn test_parse_attr_from_attr_invalid_method() {
         let a: syn::ItemFn = parse_str("#[unknown(\"/a\")] fn f() {} ").unwrap();
         let a_attr = a.attrs.first().unwrap();
-        let err = parse_attr_from_attr(&a_attr).unwrap_err();
+        let err = parse_attr_from_attr(a_attr).unwrap_err();
         // Should map to DarlingError
         assert!(err
             .to_string()

@@ -95,16 +95,13 @@ pub fn merge_paths<S: Display>(
             if path_prefix.ends_with('/') {
                 // Avoid a double `/`
                 path_prefix.pop();
-                format!("{}{}", path_prefix, key)
+                format!("{path_prefix}{key}")
             } else {
-                format!("{}{}", path_prefix, key)
+                format!("{path_prefix}{key}")
             }
         } else {
-            log::error!(
-                "All routes should have a leading '/' but non found in `{}`.",
-                key
-            );
-            format!("{}/{}", path_prefix, key)
+            log::error!("All routes should have a leading '/' but non found in `{key}`.");
+            format!("{path_prefix}/{key}")
         };
         match s1.entry(new_key) {
             MapEntry::Occupied(mut entry) => {
@@ -280,14 +277,10 @@ pub fn merge_map<T: Clone + PartialEq + std::fmt::Debug>(
             // Check if this is the same element
             if value != s1_value {
                 log::warn!(
-                    "Found conflicting {} keys while merging, \
-                    they have the same name but different values for `{}`:\n\
-                    {:?}\n\
-                    {:?}",
-                    name,
-                    key,
-                    s1_value,
-                    value,
+                    "Found conflicting {name} keys while merging, \
+                    they have the same name but different values for `{key}`:\n\
+                    {s1_value:?}\n\
+                    {value:?}",
                 );
             }
         } else {

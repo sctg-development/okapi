@@ -64,7 +64,7 @@ impl OpenApiGenerator {
 
     /// Returns a JSON Schema object for the type `T`.
     pub fn json_schema<T: ?Sized + JsonSchema>(&mut self) -> SchemaObject {
-        self.schema_generator.subschema_for::<T>().into()
+        self.schema_generator.subschema_for::<T>()
     }
 
     /// Obtain the internal `SchemaGenerator` object.
@@ -75,7 +75,7 @@ impl OpenApiGenerator {
 
     /// Return the component definition/schema of an object without any references.
     pub fn json_schema_no_ref<T: ?Sized + JsonSchema>(&mut self) -> SchemaObject {
-        <T>::json_schema(&mut self.schema_generator).into()
+        <T>::json_schema(&mut self.schema_generator)
     }
 
     /// Generate an `OpenApi` specification for all added operations.

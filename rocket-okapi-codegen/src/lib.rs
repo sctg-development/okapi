@@ -138,7 +138,7 @@ pub fn open_api_from_request_derive(input: TokenStream) -> TokenStream {
 
 fn get_add_operation_fn_name(route_fn_name: &Ident) -> Ident {
     Ident::new(
-        &format!("okapi_add_operation_for_{}_", route_fn_name),
+        &format!("okapi_add_operation_for_{route_fn_name}_"),
         route_fn_name.span(),
     )
 }

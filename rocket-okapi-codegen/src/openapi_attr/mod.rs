@@ -117,44 +117,6 @@ fn parse_openapi_args_from_string(s: &str) -> Result<OpenApiAttribute, darling::
     Ok(attr)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_deprecated_implicit() {
-        let attr = parse_openapi_args_from_string("deprecated").unwrap();
-        assert!(attr.deprecated);
-    }
-
-    #[test]
-    fn parse_deprecated_explicit_true() {
-        let attr = parse_openapi_args_from_string("deprecated = true").unwrap();
-        assert!(attr.deprecated);
-    }
-
-    #[test]
-    fn parse_deprecated_explicit_true_no_space() {
-        let attr = parse_openapi_args_from_string("deprecated=true").unwrap();
-        assert!(attr.deprecated);
-    }
-
-    #[test]
-    fn parse_deprecated_explicit_false() {
-        let attr = parse_openapi_args_from_string("deprecated = false").unwrap();
-        assert!(!attr.deprecated);
-    }
-
-    #[test]
-    fn parse_tags_and_operation_id() {
-        let attr = parse_openapi_args_from_string("tag = \"Users\", operation_id = \"explicitId\"")
-            .unwrap();
-        assert_eq!(attr.tags.len(), 1);
-        assert_eq!(attr.tags[0], "Users");
-        assert_eq!(attr.operation_id.as_deref(), Some("explicitId"));
-    }
-}
-
 fn create_empty_route_operation_fn(route_fn: ItemFn) -> TokenStream {
     let fn_name = get_add_operation_fn_name(&route_fn.sig.ident);
     TokenStream::from(quote! {
@@ -525,7 +487,7 @@ fn to_pascal_case_string(method: Method) -> String {
     let (first_char, rest) = method.as_str().split_at(1);
     let first_char = first_char.to_ascii_uppercase();
     let rest = rest.to_ascii_lowercase();
-    format!("{}{}", first_char, rest)
+    format!("{first_char}{rest}")
 }
 
 fn get_arg_types(args: impl Iterator<Item = FnArg>) -> Map<String, Type> {
@@ -543,4 +505,42 @@ fn get_arg_types(args: impl Iterator<Item = FnArg>) -> Map<String, Type> {
         }
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_deprecated_implicit() {
+        let attr = parse_openapi_args_from_string("deprecated").unwrap();
+        assert!(attr.deprecated);
+    }
+
+    #[test]
+    fn parse_deprecated_explicit_true() {
+        let attr = parse_openapi_args_from_string("deprecated = true").unwrap();
+        assert!(attr.deprecated);
+    }
+
+    #[test]
+    fn parse_deprecated_explicit_true_no_space() {
+        let attr = parse_openapi_args_from_string("deprecated=true").unwrap();
+        assert!(attr.deprecated);
+    }
+
+    #[test]
+    fn parse_deprecated_explicit_false() {
+        let attr = parse_openapi_args_from_string("deprecated = false").unwrap();
+        assert!(!attr.deprecated);
+    }
+
+    #[test]
+    fn parse_tags_and_operation_id() {
+        let attr = parse_openapi_args_from_string("tag = \"Users\", operation_id = \"explicitId\"")
+            .unwrap();
+        assert_eq!(attr.tags.len(), 1);
+        assert_eq!(attr.tags[0], "Users");
+        assert_eq!(attr.operation_id.as_deref(), Some("explicitId"));
+    }
 }

@@ -66,6 +66,6 @@ async fn main() {
         .await;
     match launch_result {
         Ok(_) => println!("Rocket shut down gracefully."),
-        Err(err) => println!("Rocket had an error: {}", err),
+        Err(err) => println!("Rocket had an error: {err}"),
     };
 }

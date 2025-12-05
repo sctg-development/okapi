@@ -51,15 +51,14 @@ where
 
 fn parameter_from_schema(schema: SchemaObject, name: String, mut required: bool) -> Parameter {
     // Check if parameter is optional (only is not already optional)
-    if required {
-        if schema
+    if required
+        && schema
             .as_object()
             .and_then(|o| o.get("nullable"))
             .and_then(|v| v.as_bool())
             == Some(true)
-        {
-            required = false;
-        }
+    {
+        required = false;
     }
     let description = schema
         .as_object()

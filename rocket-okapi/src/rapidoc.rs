@@ -845,14 +845,14 @@ fn slot_list(slots: &[String]) -> String {
     let mut result = "".to_owned();
     for html in slots {
         // Append new slot
-        result = format!(r#"{}<slot>{}</slot>"#, result, html);
+        result = format!(r#"{result}<slot>{html}</slot>"#);
     }
     result
 }
 
 fn slot_opt(slot: &Option<String>, name: &str) -> String {
     match slot {
-        Some(html) => format!(r#"<slot name="{}">{}</slot>"#, name, html),
+        Some(html) => format!(r#"<slot name="{name}">{html}</slot>"#),
         None => "".to_owned(),
     }
 }
@@ -860,8 +860,7 @@ fn slot_opt(slot: &Option<String>, name: &str) -> String {
 fn slot_logo(slot: &Option<String>) -> String {
     match slot {
         Some(html) => format!(
-            r#"<img slot="logo" src="{}" alt="logo" style="max-width: 150px; max-height: 50px"/>"#,
-            html
+            r#"<img slot="logo" src="{html}" alt="logo" style="max-width: 150px; max-height: 50px"/>"#
         ),
         None => "".to_owned(),
     }
@@ -871,7 +870,7 @@ fn slot_tags(slots: &HashMap<String, String>) -> String {
     let mut result = "".to_owned();
     for (key, html) in slots {
         // Append new slot
-        result = format!(r#"{}<slot name="tag--{}">{}</slot>"#, result, key, html);
+        result = format!(r#"{result}<slot name="tag--{key}">{html}</slot>"#);
     }
     result
 }
@@ -882,18 +881,16 @@ fn slot_endpoints(slots: &HashMap<String, String>) -> String {
         if key.contains('{') || key.contains('}') || key.contains('#') || key.contains(' ') {
             if cfg!(debug_assertions) {
                 panic!(
-                    "Slot endpoint `{}` contains invalid characters `{{`, `}}`, `#` or ` ` (space).",
-                    key
+                    "Slot endpoint `{key}` contains invalid characters `{{`, `}}`, `#` or ` ` (space)."
                 );
             } else {
                 eprintln!(
-                    "Slot endpoint `{}` contains invalid characters `{{`, `}}`, `#` or ` ` (space).",
-                    key
+                    "Slot endpoint `{key}` contains invalid characters `{{`, `}}`, `#` or ` ` (space)."
                 );
             }
         }
         // Append new slot
-        result = format!(r#"{}<slot name="{}">{}</slot>"#, result, key, html);
+        result = format!(r#"{result}<slot name="{key}">{html}</slot>"#);
     }
     result
 }
@@ -996,11 +993,11 @@ pub fn make_rapidoc(config: &RapiDocConfig) -> impl Into<Vec<Route>> {
     // Replace custom tags
     for (key, value) in &config.custom_template_tags {
         // Replace `{{KEY}}` with `VALUE`, So `{{ {{ KEY }} }}` => `{ { KEY } }`
-        index_page = index_page.replace(&format!("{{{{{}}}}}", key), value);
+        index_page = index_page.replace(&format!("{{{{{key}}}}}"), value);
     }
     for (key, value) in template_map {
         // Replace `{{KEY}}` with `VALUE`, So `{{ {{ KEY }} }}` => `{ { KEY } }`
-        index_page = index_page.replace(&format!("{{{{{}}}}}", key), &value);
+        index_page = index_page.replace(&format!("{{{{{key}}}}}"), &value);
     }
 
     vec![
