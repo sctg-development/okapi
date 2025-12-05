@@ -56,7 +56,9 @@ pub fn merge_specs<S: Display>(
     // This is a `Vec<Map<String, _>` but just merge the `Vec` items together.
     // Do not merge the `Map` items together.
     merge_vec(&mut s1.security, &s2.security);
-    merge_tags(&mut s1.tags, &s2.tags)?;
+    // `merge_tags` returns a `Vec<Tag>` containing the merged tags. Assign
+    // the result back to `s1.tags` so merged tags take effect.
+    s1.tags = merge_tags(&mut s1.tags, &s2.tags)?;
     // Replace the external_docs info as 1 block, so don't mix
     merge_option(&mut s1.external_docs, &s2.external_docs);
     merge_map(&mut s1.extensions, &s2.extensions, "extensions");

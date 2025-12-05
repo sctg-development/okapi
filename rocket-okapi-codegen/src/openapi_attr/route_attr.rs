@@ -1,15 +1,15 @@
+use darling::ast::NestedMeta as DarlingNestedMeta;
 use darling::{Error, FromMeta};
 use proc_macro::TokenStream;
+use quote::ToTokens;
 use quote::{quote, quote_spanned};
 use rocket_http::{ext::IntoOwned, uri::Origin, MediaType, Method};
 use std::str::FromStr;
-use syn::spanned::Spanned;
-use syn::{Attribute, Meta, MetaList};
 use syn::ext::IdentExt;
-use darling::ast::NestedMeta as DarlingNestedMeta;
-use quote::ToTokens;
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::token::Comma;
+use syn::{Attribute, Meta, MetaList};
 
 #[derive(Debug)]
 pub struct Route {
@@ -217,7 +217,7 @@ fn parse_attr(name: &str, args: &[DarlingNestedMeta]) -> Result<Route, Error> {
 
 fn is_route_attribute(a: &Attribute) -> bool {
     a.path().is_ident("get")
-           || a.path().is_ident("put")
+        || a.path().is_ident("put")
         || a.path().is_ident("post")
         || a.path().is_ident("delete")
         || a.path().is_ident("options")
@@ -281,7 +281,11 @@ fn parse_args_string_to_parts(s: &str) -> Vec<String> {
 }
 
 fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
-    let name = attr.path().get_ident().map(|id| id.to_string()).unwrap_or_default();
+    let name = attr
+        .path()
+        .get_ident()
+        .map(|id| id.to_string())
+        .unwrap_or_default();
     let args_str = extract_inner_args_string(attr).unwrap_or_default();
     let parts = parse_args_string_to_parts(&args_str);
     // Simple parsing rules: first positional argument that's a string is the path
@@ -299,7 +303,12 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
             let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
             match MediaType::parse_flexible(val) {
                 Some(m) => media_type = Some(m),
-                None => return Err(Error::unsupported_format(&format!("Unknown media type: '{}'", val))),
+                None => {
+                    return Err(Error::unsupported_format(&format!(
+                        "Unknown media type: '{}'",
+                        val
+                    )))
+                }
             }
             continue;
         }
@@ -315,26 +324,52 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
         match Method::from_str(method) {
             Ok(m) => {
                 let origin = match path {
-                    Some(p) => Origin::parse_route(&p).map(|o| o.into_owned()).map_err(|e| Error::unsupported_format(&e.to_string()))?,
+                    Some(p) => Origin::parse_route(&p)
+                        .map(|o| o.into_owned())
+                        .map_err(|e| Error::unsupported_format(&e.to_string()))?,
                     None => return Err(Error::too_few_items(1)),
                 };
-                return Ok(Route { method: m, origin, media_type, data_param: data_param.map(trim_angle_brackers) });
+                return Ok(Route {
+                    method: m,
+                    origin,
+                    media_type,
+                    data_param: data_param.map(trim_angle_brackers),
+                });
             }
-            Err(()) => return Err(Error::unsupported_format(&format!("Unknown HTTP method in protect macro: '{}'", method))),
+            Err(()) => {
+                return Err(Error::unsupported_format(&format!(
+                    "Unknown HTTP method in protect macro: '{}'",
+                    method
+                )))
+            }
         }
     } else if name == "route" {
         // route macro: first arg could be method string? Not handling for now.
-        return Err(Error::unsupported_format("'route' attribute parsing not implemented"));
+        return Err(Error::unsupported_format(
+            "'route' attribute parsing not implemented",
+        ));
     } else {
         match Method::from_str(&name) {
             Ok(m) => {
                 let origin = match path {
-                    Some(p) => Origin::parse_route(&p).map(|o| o.into_owned()).map_err(|e| Error::unsupported_format(&e.to_string()))?,
+                    Some(p) => Origin::parse_route(&p)
+                        .map(|o| o.into_owned())
+                        .map_err(|e| Error::unsupported_format(&e.to_string()))?,
                     None => return Err(Error::too_few_items(1)),
                 };
-                return Ok(Route { method: m, origin, media_type, data_param: data_param.map(trim_angle_brackers) });
+                return Ok(Route {
+                    method: m,
+                    origin,
+                    media_type,
+                    data_param: data_param.map(trim_angle_brackers),
+                });
             }
-            Err(()) => return Err(Error::unsupported_format(&format!("Unknown HTTP method: '{}'", name))),
+            Err(()) => {
+                return Err(Error::unsupported_format(&format!(
+                    "Unknown HTTP method: '{}'",
+                    name
+                )))
+            }
         }
     }
 }
@@ -351,5 +386,73 @@ pub(crate) fn parse_attrs<'a>(
         None => Err(quote! {
                 compile_error!("Could not find Rocket route attribute. Ensure the #[openapi] attribute is placed *before* the Rocket route attribute.");
             }.into()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use darling::Error as DarlingError;
+    use syn::parse_str;
+
+    #[test]
+    fn test_parse_args_string_to_parts_basic() {
+        let s = "\"/user/<id>?<q>\", format = \"application/json\", data = \"<a>\"";
+        let parts = parse_args_string_to_parts(s);
+        assert_eq!(parts.len(), 3);
+        assert!(parts.iter().any(|p| p.contains("/user/<id>")));
+        assert!(parts.iter().any(|p| p.contains("format")));
+        assert!(parts.iter().any(|p| p.contains("data")));
+    }
+
+    #[test]
+    fn test_extract_inner_args_string() {
+        let item: syn::ItemFn = parse_str("#[get(\"/a\")] fn f() {} ").unwrap();
+        let attr = item.attrs.first().unwrap();
+        let out = extract_inner_args_string(&attr).unwrap();
+        assert_eq!(out, "\"/a\"");
+    }
+
+    #[test]
+    fn test_is_route_attribute_get_and_protect() {
+        let a: syn::ItemFn = parse_str("#[get(\"/a\")] fn f() {} ").unwrap();
+        let a_attr = a.attrs.first().unwrap();
+        assert!(is_route_attribute(&a_attr));
+        let b: syn::ItemFn = parse_str("#[protect_get(\"/a\")] fn f() {} ").unwrap();
+        let b_attr = b.attrs.first().unwrap();
+        assert!(is_route_attribute(&b_attr));
+    }
+
+    #[test]
+    fn test_parse_attr_from_attr_get_success() {
+        let a: syn::ItemFn = parse_str("#[get(\"/user/<id>?<q>\")] fn f() {} ").unwrap();
+        let a_attr = a.attrs.first().unwrap();
+        let r = parse_attr_from_attr(&a_attr).unwrap();
+        assert_eq!(r.method, Method::Get);
+        assert!(r.origin.path().as_str().contains("/user/<id>"));
+        assert!(r.path_params().any(|p| p == "id"));
+        assert!(r.query_params().any(|p| p == "q") || r.query_params().any(|p| p == "<q>"));
+    }
+
+    #[test]
+    fn test_parse_attr_from_attr_protect_get_data_trim() {
+        let a: syn::ItemFn =
+            parse_str("#[protect_get(\"/api/<a>\", data = \"<param>\")] fn f() {} ").unwrap();
+        let a_attr = a.attrs.first().unwrap();
+        let r = parse_attr_from_attr(&a_attr).unwrap();
+        assert_eq!(r.method, Method::Get);
+        assert_eq!(r.data_param.as_deref(), Some("param"));
+    }
+
+    #[test]
+    fn test_parse_attr_from_attr_invalid_method() {
+        let a: syn::ItemFn = parse_str("#[unknown(\"/a\")] fn f() {} ").unwrap();
+        let a_attr = a.attrs.first().unwrap();
+        let err = parse_attr_from_attr(&a_attr).unwrap_err();
+        // Should map to DarlingError
+        assert!(err
+            .to_string()
+            .to_lowercase()
+            .contains("unknown http method"));
     }
 }

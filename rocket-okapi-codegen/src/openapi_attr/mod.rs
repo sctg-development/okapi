@@ -2,6 +2,7 @@ mod doc_attr;
 mod route_attr;
 
 use crate::get_add_operation_fn_name;
+use darling::ast::NestedMeta as DarlingNestedMeta;
 use darling::FromMeta;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -10,13 +11,12 @@ use quote::ToTokens;
 use rocket_http::Method;
 use std::collections::BTreeMap as Map;
 use syn::ext::IdentExt;
-use syn::{
-    parse_macro_input, FnArg, GenericArgument, Ident, ItemFn, PathArguments,
-    PathSegment, ReturnType, Type, TypeTuple,
-};
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use darling::ast::NestedMeta as DarlingNestedMeta;
+use syn::{
+    parse_macro_input, FnArg, GenericArgument, Ident, ItemFn, PathArguments, PathSegment,
+    ReturnType, Type, TypeTuple,
+};
 
 /// This structure documents all the properties that can be used in
 /// the `#[openapi]` derive macro. for example: `#[openapi(tag = "Users")]`
@@ -84,6 +84,23 @@ fn parse_openapi_args_from_string(s: &str) -> Result<OpenApiAttribute, darling::
             attr.deprecated = true;
             continue;
         }
+        // Accept both `deprecated = true` and `deprecated=true` forms.
+        if let Some(rest) = part
+            .strip_prefix("deprecated =")
+            .or_else(|| part.strip_prefix("deprecated="))
+        {
+            let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
+            // Accept boolean literals in various forms
+            match val.to_ascii_lowercase().as_str() {
+                "true" => attr.deprecated = true,
+                "false" => attr.deprecated = false,
+                _ => {
+                    // For non-boolean values, ignore quietly for now. The attribute
+                    // parser is intended to be forgiving similar to the implicit form.
+                }
+            }
+            continue;
+        }
         if let Some(rest) = part.strip_prefix("tag =") {
             let val = rest.trim().trim_matches(|c| c == '"' || c == '\'');
             attr.tags.push(val.to_string());
@@ -101,6 +118,44 @@ fn parse_openapi_args_from_string(s: &str) -> Result<OpenApiAttribute, darling::
         }
     }
     Ok(attr)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_deprecated_implicit() {
+        let attr = parse_openapi_args_from_string("deprecated").unwrap();
+        assert!(attr.deprecated);
+    }
+
+    #[test]
+    fn parse_deprecated_explicit_true() {
+        let attr = parse_openapi_args_from_string("deprecated = true").unwrap();
+        assert!(attr.deprecated);
+    }
+
+    #[test]
+    fn parse_deprecated_explicit_true_no_space() {
+        let attr = parse_openapi_args_from_string("deprecated=true").unwrap();
+        assert!(attr.deprecated);
+    }
+
+    #[test]
+    fn parse_deprecated_explicit_false() {
+        let attr = parse_openapi_args_from_string("deprecated = false").unwrap();
+        assert!(!attr.deprecated);
+    }
+
+    #[test]
+    fn parse_tags_and_operation_id() {
+        let attr = parse_openapi_args_from_string("tag = \"Users\", operation_id = \"explicitId\"")
+            .unwrap();
+        assert_eq!(attr.tags.len(), 1);
+        assert_eq!(attr.tags[0], "Users");
+        assert_eq!(attr.operation_id.as_deref(), Some("explicitId"));
+    }
 }
 
 fn create_empty_route_operation_fn(route_fn: ItemFn) -> TokenStream {

@@ -1,3 +1,7 @@
+![](https://tokeisrv.sctg.eu.org/b1/github.com/sctg-development/okapi?type=Rust,TypeScript,TSX,C&category=code)
+![](https://tokeisrv.sctg.eu.org/b1/github.com/sctg-development/okapi?type=TSX,Rust,TypeScript&category=comments&color=abdbe3)
+![](https://tokeisrv.sctg.eu.org/b1/github.com/sctg-development/okapi?type=Markdown&label=doc&color=e28743)
+[![codecov](https://codecov.io/github/sctg-development/okapi/branch/main/graph/badge.svg)](https://codecov.io/github/sctg-development/okapi)
 # Okapi
 Okapi: [![Download](https://img.shields.io/crates/v/okapi)](https://crates.io/crates/okapi/)
 [![API Docs](https://img.shields.io/badge/docs-okapi-blue)](https://docs.rs/okapi/latest/okapi/)

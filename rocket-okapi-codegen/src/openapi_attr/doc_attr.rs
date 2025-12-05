@@ -65,3 +65,33 @@ fn none_if_empty(s: String) -> Option<String> {
         Some(s)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use syn::parse_str;
+
+    #[test]
+    fn test_get_title_and_desc_from_doc_markdown() {
+        let item: syn::ItemFn = parse_str("#[doc = \"# Title\\n\\nSome description\"] fn f() {} ").unwrap();
+        let (title, desc) = get_title_and_desc_from_doc(&item.attrs);
+        assert_eq!(title.as_deref(), Some("Title"));
+        assert!(desc.unwrap().contains("Some description"));
+    }
+
+    #[test]
+    fn test_get_title_and_desc_from_doc_description_only() {
+        let item: syn::ItemFn = parse_str("#[doc = \"First line\\n\\nSecond paragraph\"] fn f() {} ").unwrap();
+        let (title, desc) = get_title_and_desc_from_doc(&item.attrs);
+        assert!(title.is_none());
+        assert!(desc.unwrap().contains("First line"));
+    }
+
+    #[test]
+    fn test_none_if_empty_return_none() {
+        assert!(none_if_empty("".to_owned()).is_none());
+        // Whitespace only is considered non-empty by `none_if_empty` implementation
+        assert!(none_if_empty("   ".to_owned()).is_some());
+        assert!(none_if_empty(" content ".to_owned()).is_some());
+    }
+}
