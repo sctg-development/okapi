@@ -1,8 +1,8 @@
 use crate::gen::OpenApiGenerator;
-use okapi::openapi3::{Object, Parameter, ParameterValue};
-use schemars::Schema;
 use okapi::openapi3::SchemaObject;
+use okapi::openapi3::{Object, Parameter, ParameterValue};
 use schemars::JsonSchema;
+use schemars::Schema;
 use serde_json::Value;
 
 /// Given an object that implements the `JsonSchema` generate all the `Parameter`

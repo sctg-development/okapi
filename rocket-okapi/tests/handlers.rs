@@ -1,10 +1,10 @@
-use rocket_okapi::handlers::OpenApiHandler;
-use rocket_okapi::okapi::openapi3::OpenApi;
-use rocket_okapi::settings::OpenApiSettings;
+use rocket::http::ContentType;
 use rocket::http::Status;
 use rocket::local::blocking::Client;
-use rocket::http::ContentType;
+use rocket_okapi::handlers::OpenApiHandler;
 use rocket_okapi::handlers::{ContentHandler, RedirectHandler};
+use rocket_okapi::okapi::openapi3::OpenApi;
+use rocket_okapi::settings::OpenApiSettings;
 
 #[test]
 fn test_openapi_handler_adds_base_path_server() {

@@ -90,14 +90,21 @@ mod tests {
     fn test_operation_id_and_fn_name_for_add_operation() {
         let path: syn::Path = parse_str("crate::module::do_stuff").unwrap();
         let fn_name = fn_name_for_add_operation(path.clone());
-        assert!(fn_name.segments.last().unwrap().ident.to_string().starts_with("okapi_add_operation_for_do_stuff"));
+        assert!(fn_name
+            .segments
+            .last()
+            .unwrap()
+            .ident
+            .to_string()
+            .starts_with("okapi_add_operation_for_do_stuff"));
         let id = operation_id(&path);
         assert_eq!(id, "crate_module_do_stuff");
     }
 
     #[test]
     fn test_create_add_operations_tokens() {
-        let mut paths: syn::punctuated::Punctuated<syn::Path, syn::token::Comma> = syn::punctuated::Punctuated::new();
+        let mut paths: syn::punctuated::Punctuated<syn::Path, syn::token::Comma> =
+            syn::punctuated::Punctuated::new();
         paths.push(parse_str::<syn::Path>("crate::a").unwrap());
         paths.push(parse_str::<syn::Path>("crate::b").unwrap());
         let tokens = create_add_operations(paths);
@@ -119,7 +126,7 @@ mod tests {
 fn create_add_operations(paths: Punctuated<Path, Comma>) -> TokenStream2 {
     let function_calls = paths.into_iter().map(|path| {
         let fn_name = fn_name_for_add_operation(path.clone());
-        
+
         let operation_id = operation_id(&path);
         quote! {
             #fn_name(&mut gen, #operation_id.to_owned())

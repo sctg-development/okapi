@@ -221,7 +221,10 @@ fn accept_either_schema(
     // Set an `anyOf` property with the two schemas
     schema.insert(
         "anyOf".to_owned(),
-        serde_json::Value::Array(vec![serde_json::Value::from(s1), serde_json::Value::from(s2)]),
+        serde_json::Value::Array(vec![
+            serde_json::Value::from(s1),
+            serde_json::Value::from(s2),
+        ]),
     );
     Some(schema)
 }
