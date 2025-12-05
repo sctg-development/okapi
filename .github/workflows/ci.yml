@@ -26,7 +26,7 @@ jobs:
         # Allowed to fail but this will notify us that some dependency might need an update.
         continue-on-error: true
 
-      # Run code coverage on Linux only
+      # Run code coverage
       - name: Run code coverage
         continue-on-error: true
         shell: bash
