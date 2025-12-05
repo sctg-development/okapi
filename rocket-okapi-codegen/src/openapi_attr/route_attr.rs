@@ -2,14 +2,11 @@ use darling::ast::NestedMeta as DarlingNestedMeta;
 use darling::{Error, FromMeta};
 use proc_macro::TokenStream;
 use quote::ToTokens;
-use quote::{quote, quote_spanned};
+use quote::quote;
 use rocket_http::{ext::IntoOwned, uri::Origin, MediaType, Method};
 use std::str::FromStr;
-use syn::ext::IdentExt;
-use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
-use syn::token::Comma;
-use syn::{Attribute, Meta, MetaList};
+use syn::Attribute;
 
 #[derive(Debug)]
 pub struct Route {
@@ -392,7 +389,7 @@ pub(crate) fn parse_attrs<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use darling::Error as DarlingError;
+    
     use syn::parse_str;
 
     #[test]

@@ -2,7 +2,6 @@ mod doc_attr;
 mod route_attr;
 
 use crate::get_add_operation_fn_name;
-use darling::ast::NestedMeta as DarlingNestedMeta;
 use darling::FromMeta;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -11,8 +10,6 @@ use quote::ToTokens;
 use rocket_http::Method;
 use std::collections::BTreeMap as Map;
 use syn::ext::IdentExt;
-use syn::punctuated::Punctuated;
-use syn::token::Comma;
 use syn::{
     parse_macro_input, FnArg, GenericArgument, Ident, ItemFn, PathArguments, PathSegment,
     ReturnType, Type, TypeTuple,
