@@ -42,6 +42,7 @@ pub fn create_openapi_spec(routes: TokenStream) -> Result<TokenStream2> {
     })
 }
 
+#[allow(dead_code)]
 pub(crate) fn create_openapi_spec_ts(routes: TokenStream2) -> Result<TokenStream2> {
     let paths = <Punctuated<Path, Comma>>::parse_terminated.parse2(routes)?;
     let add_operations = create_add_operations(paths);
@@ -150,5 +151,17 @@ mod tests {
         let out = tokens.to_string();
         assert!(!out.is_empty());
         assert!(out.contains("spec"));
+    }
+
+    #[test]
+    fn test_create_openapi_spec_ts_includes_add_operations_and_ids() {
+        let ts: TS2 = quote!(crate::a, crate::b);
+        let tokens = create_openapi_spec_ts(ts).expect("should generate spec closure");
+        let out = tokens.to_string();
+        // Should contain add operation function names and operation id strings
+        assert!(out.contains("okapi_add_operation_for_a"));
+        assert!(out.contains("okapi_add_operation_for_b"));
+        assert!(out.contains("crate_a"));
+        assert!(out.contains("crate_b"));
     }
 }

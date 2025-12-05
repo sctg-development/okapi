@@ -14,9 +14,11 @@ struct User {
     email: Option<String>,
 }
 
+#[allow(dead_code)]
 fn example_email() -> &'static str {
     "test@example.com"
 }
+#[allow(dead_code)]
 fn example_uuid() -> &'static str {
     "fdb12d51-0e3f-4ff8-821e-fbc255d8e413"
 }

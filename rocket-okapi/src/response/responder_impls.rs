@@ -103,7 +103,7 @@ impl<R: OpenApiResponderInner> OpenApiResponderInner for (rocket::http::Status, 
     }
 }
 
-impl<'r, 'o: 'r, T> OpenApiResponderInner for std::borrow::Cow<'o, T>
+impl<'o, T> OpenApiResponderInner for std::borrow::Cow<'o, T>
 where
     T: OpenApiResponderInner + Clone,
 {
@@ -392,7 +392,7 @@ impl OpenApiResponderInner for rocket_dyn_templates::Template {
 
 /// A streaming channel, returned by [`rocket_ws::WebSocket::channel()`].
 #[cfg(feature = "rocket_ws")]
-impl<'r, 'o: 'r> OpenApiResponderInner for rocket_ws::Channel<'o> {
+impl<'o> OpenApiResponderInner for rocket_ws::Channel<'o> {
     fn responses(gen: &mut OpenApiGenerator) -> Result {
         // Response type is unknown at compile time.
         <Vec<u8>>::responses(gen)
@@ -401,7 +401,7 @@ impl<'r, 'o: 'r> OpenApiResponderInner for rocket_ws::Channel<'o> {
 
 /// A `Stream` of `Messages``, returned by [`rocket_ws::WebSocket::stream()`], used via `Stream!`.
 #[cfg(feature = "rocket_ws")]
-impl<'r, 'o: 'r, S> OpenApiResponderInner for rocket_ws::stream::MessageStream<'o, S> {
+impl<'o, S> OpenApiResponderInner for rocket_ws::stream::MessageStream<'o, S> {
     fn responses(gen: &mut OpenApiGenerator) -> Result {
         // Response type is unknown at compile time.
         <Vec<u8>>::responses(gen)

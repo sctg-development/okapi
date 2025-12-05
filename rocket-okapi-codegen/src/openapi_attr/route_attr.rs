@@ -168,6 +168,7 @@ fn parse_route_attr(args: &[DarlingNestedMeta]) -> Result<Route, Error> {
     })
 }
 
+#[allow(dead_code)]
 fn parse_method_route_attr(method: Method, args: &[DarlingNestedMeta]) -> Result<Route, Error> {
     if args.is_empty() {
         return Err(Error::too_few_items(1));
@@ -190,6 +191,7 @@ fn trim_angle_brackers(mut s: String) -> String {
     s
 }
 
+#[allow(dead_code)]
 fn parse_attr(name: &str, args: &[DarlingNestedMeta]) -> Result<Route, Error> {
     // Handle protect_* methods by extracting the underlying HTTP method
     if let Some(method_str) = name.strip_prefix("protect_") {
@@ -364,7 +366,7 @@ pub(crate) fn parse_attrs<'a>(
 ) -> Result<Route, TokenStream> {
     match attrs.into_iter().find(|a| is_route_attribute(a)) {
         Some(attr) => {
-            let span = attr.span();
+            let _span = attr.span();
             parse_attr_from_attr(attr)
                 .map_err(|e| e.with_span(&attr).write_errors().into())
         }

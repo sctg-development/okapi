@@ -28,18 +28,13 @@ where
     let mut parameter_list: Vec<Parameter> = Vec::new();
     // If schema is an object, extract properties
     if let Some(obj) = schema.as_object() {
-        if let Some(props) = obj.get("properties") {
-            if let Value::Object(map) = props {
-                properties = map.clone();
-            }
+        if let Some(Value::Object(map)) = obj.get("properties") {
+            properties = map.clone();
         }
     }
     if !properties.is_empty() {
         for (key, property) in properties {
-            let prop_schema: Schema = match property.try_into() {
-                Ok(s) => s,
-                Err(_) => Schema::default(),
-            };
+            let prop_schema: Schema = property.try_into().unwrap_or_default();
             parameter_list.push(parameter_from_schema(prop_schema, key, required));
         }
     } else {
