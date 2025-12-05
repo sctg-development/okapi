@@ -1,8 +1,8 @@
 use darling::ast::NestedMeta as DarlingNestedMeta;
 use darling::{Error, FromMeta};
 use proc_macro::TokenStream;
-use quote::ToTokens;
 use quote::quote;
+use quote::ToTokens;
 use rocket_http::{ext::IntoOwned, uri::Origin, MediaType, Method};
 use std::str::FromStr;
 use syn::spanned::Spanned;
@@ -389,7 +389,7 @@ pub(crate) fn parse_attrs<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     use syn::parse_str;
 
     #[test]
