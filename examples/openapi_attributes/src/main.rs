@@ -3,9 +3,9 @@ use rocket::{get, serde::json::Json};
 use rocket_okapi::okapi::schemars;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{openapi, openapi_get_routes, rapidoc::*, swagger_ui::*};
-use tracing_subscriber::EnvFilter;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use tracing_subscriber::EnvFilter;
 
 #[derive(Serialize, Deserialize, Debug, JsonSchema, Clone)]
 pub struct User {

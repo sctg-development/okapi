@@ -1,8 +1,8 @@
 use rocket::{Build, Rocket};
-use tracing_subscriber::EnvFilter;
 use rocket_okapi::okapi::openapi3::OpenApi;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{mount_endpoints_and_merged_docs, rapidoc::*};
+use tracing_subscriber::EnvFilter;
 
 mod api;
 mod error;
