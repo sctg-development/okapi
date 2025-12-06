@@ -1,9 +1,9 @@
 use rocket::{get, post, serde::json::Json, serde::uuid::Uuid};
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{openapi, openapi_get_routes, rapidoc::*, swagger_ui::*};
-use tracing_subscriber::EnvFilter;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use tracing_subscriber::EnvFilter;
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase")]
