@@ -103,3 +103,18 @@ async fn main() {
         Err(err) => println!("Rocket had an error: {err}"),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+
+    #[test]
+    fn streams_spec_contains_routes() {
+        let spec = openapi_get_spec![event_stream, byte_stream, reader_stream, text_stream];
+        assert!(spec
+            .paths
+            .keys()
+            .any(|k| k.contains("/event_stream") || k.contains("/byte_stream")));
+    }
+}

@@ -12,6 +12,6 @@ rocket_okapi = { path = "../../rocket-okapi", features = [
     "rapidoc",
     "rocket_dyn_templates",
 ] }
-serde = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 rocket_dyn_templates = { workspace = true, features = ["handlebars"] }
 handlebars = "5.0.0"

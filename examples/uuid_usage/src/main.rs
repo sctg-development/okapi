@@ -105,3 +105,18 @@ async fn main() {
         Err(err) => println!("Rocket had an error: {err}"),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+    use rocket_okapi::settings::OpenApiSettings;
+
+    #[test]
+    fn uuid_spec_contains_user_paths() {
+        let settings = OpenApiSettings::default();
+        let spec =
+            openapi_get_spec![settings: get_all_users, get_user, get_user_by_name, create_user];
+        assert!(spec.paths.keys().any(|k| k.contains("/user")));
+    }
+}

@@ -131,3 +131,23 @@ fn custom_openapi_spec() -> OpenApi {
         ..Default::default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+
+    #[test]
+    fn custom_spec_contains_home_path() {
+        let spec = custom_openapi_spec();
+        assert!(spec.info.title.contains("The best API ever"));
+        assert!(spec.paths.keys().any(|k| k.contains("/home")));
+    }
+
+    #[test]
+    fn post_routes_spec_contains_post_path() {
+        let settings = rocket_okapi::settings::OpenApiSettings::default();
+        let spec = rocket_okapi::openapi_get_spec![settings: post::create_post, post::get_post];
+        assert!(spec.paths.keys().any(|k| k.contains("/")));
+    }
+}

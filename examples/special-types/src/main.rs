@@ -74,3 +74,18 @@ async fn main() {
         Err(err) => println!("Rocket had an error: {err}"),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+
+    #[test]
+    fn special_types_spec_contains_paths() {
+        let spec = openapi_get_spec![get_data, path_info, create_user];
+        assert!(spec
+            .paths
+            .keys()
+            .any(|k| k.contains("/get_date") || k.contains("/paths")));
+    }
+}

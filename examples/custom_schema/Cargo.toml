@@ -10,6 +10,6 @@ rocket_okapi = { path = "../../rocket-okapi", features = [
     "swagger",
     "rapidoc",
 ] }
-serde = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 schemars = "1.1.0"

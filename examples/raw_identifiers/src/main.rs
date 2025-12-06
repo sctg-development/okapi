@@ -37,3 +37,15 @@ fn rocket() -> _ {
             }),
         )
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+
+    #[test]
+    fn raw_identifier_route_present() {
+        let spec = openapi_get_spec![hello];
+        assert!(spec.paths.keys().any(|k| k.contains("/hello")));
+    }
+}

@@ -135,3 +135,24 @@ async fn main() {
         Err(err) => println!("Rocket had an error: {err}"),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+
+    #[test]
+    fn generated_spec_contains_user_routes() {
+        let spec = openapi_get_spec![
+            get_all_users,
+            get_user,
+            get_user_by_name,
+            create_user,
+            create_post_by_query
+        ];
+        assert!(spec.paths.keys().any(|k| k.contains("/user")));
+        assert!(spec.paths.keys().any(|k| k.contains("post_by_query")));
+        // The `hidden` endpoint is marked skip
+        assert!(!spec.paths.keys().any(|k| k.contains("/hidden")));
+    }
+}

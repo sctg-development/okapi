@@ -121,3 +121,17 @@ fn custom_openapi_spec() -> OpenApi {
         ..Default::default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+    use rocket_okapi::settings::OpenApiSettings;
+
+    #[test]
+    fn nested_api_spec_contains_paths() {
+        let settings = OpenApiSettings::default();
+        let (_routes, spec) = api::get_routes_and_docs(&settings);
+        assert!(spec.paths.keys().any(|k| k.contains("/")));
+    }
+}

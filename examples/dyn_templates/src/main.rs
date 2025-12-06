@@ -46,3 +46,15 @@ async fn main() {
         Err(err) => println!("Rocket had an error: {err}"),
     };
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+
+    #[test]
+    fn spec_contains_page_route() {
+        let spec = openapi_get_spec![get_page];
+        assert!(spec.paths.keys().any(|k| k.contains("/page")));
+    }
+}

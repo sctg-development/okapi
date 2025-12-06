@@ -183,3 +183,15 @@ impl OpenApiResponderInner for MyError {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket_okapi::openapi_get_spec;
+
+    #[test]
+    fn secure_guard_spec_contains_no_auth() {
+        let spec = openapi_get_spec![no_auth::no_special_auth];
+        assert!(spec.paths.keys().any(|k| k.contains("/no_auth")));
+    }
+}
