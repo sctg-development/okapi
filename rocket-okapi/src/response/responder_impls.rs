@@ -72,17 +72,10 @@ impl OpenApiResponderInner for &[u8] {
     }
 }
 
-impl<L, R> OpenApiResponderInner for rocket::Either<L, R>
-where
-    L: OpenApiResponderInner,
-    R: OpenApiResponderInner,
-{
-    fn responses(gen: &mut OpenApiGenerator) -> Result {
-        let left_responses = L::responses(gen)?;
-        let right_responses = R::responses(gen)?;
-        produce_any_responses(left_responses, right_responses)
-    }
-}
+// The `rocket::Either` type has been removed/changed in Rocket v0.6.
+// The same behavior is implemented for `Result<T, E>` below, which covers the
+// previous `Either<L, R>` case. The `Either` implementation is therefore no
+// longer needed and has been removed.
 
 // The ContentType can be set at runtime, so no way of knowing what the mime-type is up front.
 impl<R: OpenApiResponderInner> OpenApiResponderInner for (rocket::http::ContentType, R) {

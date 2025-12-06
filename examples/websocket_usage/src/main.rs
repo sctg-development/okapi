@@ -3,6 +3,7 @@ use rocket::get;
 use rocket::response::content::RawHtml;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{openapi, openapi_get_routes, rapidoc::*, swagger_ui::*};
+use tracing_subscriber::EnvFilter;
 
 #[openapi]
 #[get("/")]
@@ -71,6 +72,9 @@ fn echo(ws: rocket_ws::WebSocket) -> rocket_ws::Channel<'static> {
 
 #[rocket::main]
 async fn main() {
+    // Initialize tracing subscriber so RUST_LOG controls logging
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
     let launch_result = rocket::build()
         .mount("/", openapi_get_routes![test_websocket, hello, echo,])
         .mount(

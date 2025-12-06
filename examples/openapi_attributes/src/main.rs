@@ -3,6 +3,7 @@ use rocket::{get, serde::json::Json};
 use rocket_okapi::okapi::schemars;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{openapi, openapi_get_routes, rapidoc::*, swagger_ui::*};
+use tracing_subscriber::EnvFilter;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -78,6 +79,9 @@ impl<'r> FromRequest<'r> for CustomDB {
 
 #[rocket::main]
 async fn main() {
+    // Initialize tracing subscriber so RUST_LOG controls logging
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
     let launch_result = rocket::build()
         .mount("/", openapi_get_routes![list_users])
         .mount(

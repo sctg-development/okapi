@@ -35,7 +35,7 @@ impl Handler for OpenApiHandler {
 
         if spec.servers.is_empty() && base_path != "/" {
             spec.servers.push(Server {
-                url: base_path.to_owned(),
+                url: base_path.to_owned().to_string(),
                 ..okapi::openapi3::Server::default()
             })
         }

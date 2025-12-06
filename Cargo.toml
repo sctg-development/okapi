@@ -19,12 +19,25 @@ resolver = "2"
 
 [workspace.dependencies]
 log = "0.4"
-rocket = { version = "=0.5.1", default-features = false, features = ["json"] }
-rocket_ws = "0.1.1"
-rocket_http = "=0.5.1"
-rocket_dyn_templates = "=0.2.0"
-rocket_db_pools = "=0.2.0"
-rocket_sync_db_pools = "=0.1.0"
+# Use the development Rocket from the rwf2 fork branch `master` for the workspace
+rocket = { git = "https://github.com/rwf2/Rocket.git", branch = "master", default-features = false, features = [
+    "json",
+    "http2",
+    "http3-preview",
+] }
+rocket_ws = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_http = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_dyn_templates = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_db_pools = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_sync_db_pools = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
 schemars = "1.1.0"
 serde = "1.0"
 serde_json = "1.0"
+
+[patch.crates-io]
+rocket = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_http = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_ws = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_dyn_templates = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_db_pools = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }
+rocket_sync_db_pools = { git = "https://github.com/rwf2/Rocket.git", branch = "master" }

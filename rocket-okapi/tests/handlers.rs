@@ -39,13 +39,14 @@ fn test_content_handler_bytes_and_json_and_trailing_slash() {
     let r = client2.get("/j/j").dispatch();
     assert_eq!(r.status(), Status::Ok);
 
-    // trailing slash should result in a forward (redirection)
+    // trailing slash no longer routes to the same handler in Rocket v0.6; expect Not Found
     let handler_bytes = ContentHandler::bytes(ContentType::Plain, b"x");
     let route2 = handler_bytes.into_route("/slash");
     let rocket3 = rocket::build().mount("/s", vec![route2]);
     let client3 = Client::tracked(rocket3).expect("valid rocket instance");
     let r3 = client3.get("/s/slash/").dispatch();
-    assert!(r3.status().code >= 300 && r3.status().code < 400);
+    // Debug prints removed
+    assert_eq!(r3.status(), Status::NotFound);
 }
 
 #[test]

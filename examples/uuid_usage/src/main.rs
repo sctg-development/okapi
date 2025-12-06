@@ -1,6 +1,7 @@
 use rocket::{get, post, serde::json::Json, serde::uuid::Uuid};
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{openapi, openapi_get_routes, rapidoc::*, swagger_ui::*};
+use tracing_subscriber::EnvFilter;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -71,6 +72,9 @@ fn create_user(user: Json<User>) -> Json<User> {
 
 #[rocket::main]
 async fn main() {
+    // Initialize tracing subscriber to restore RUST_LOG behavior
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
     let launch_result = rocket::build()
         .mount(
             "/",

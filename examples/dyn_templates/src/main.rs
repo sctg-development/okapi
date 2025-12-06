@@ -2,6 +2,7 @@ use rocket::get;
 use rocket_dyn_templates::{context, Template};
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{openapi, openapi_get_routes, rapidoc::*, swagger_ui::*};
+use tracing_subscriber::EnvFilter;
 
 /// # Get Page
 ///
@@ -14,6 +15,9 @@ fn get_page(name: String) -> Template {
 
 #[rocket::main]
 async fn main() {
+    // Initialize tracing subscriber so RUST_LOG controls logging
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
     let launch_result = rocket::build()
         .mount("/", openapi_get_routes![get_page])
         .mount(

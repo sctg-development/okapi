@@ -12,6 +12,7 @@ rocket_okapi = { path = "../../rocket-okapi", features = [
 ] }
 serde = { workspace = true, features = ["derive"] }
 schemars = "1.1.0"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 [dev-dependencies]
 serde_json = "1.0"

@@ -8,6 +8,7 @@ use rocket_okapi::okapi::schemars;
 use rocket_okapi::response::OpenApiResponderInner;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{openapi_get_routes, rapidoc::*, swagger_ui::*, OpenApiError};
+use tracing_subscriber::EnvFilter;
 
 // --------- All different methods of implementing `OpenApiFromRequest` ------------
 // There are a few different ways of doing things.
@@ -36,6 +37,9 @@ mod cookies;
 
 #[tokio::main]
 async fn main() {
+    // Initialize tracing subscriber so RUST_LOG controls logging
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
     let figment = Config::figment()
         // Set a dummy secret
         .merge(("secret_key", vec![1u8; 64]));

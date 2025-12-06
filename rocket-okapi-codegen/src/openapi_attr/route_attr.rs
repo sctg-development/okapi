@@ -106,7 +106,7 @@ impl FromMeta for MethodMeta {
     fn from_string(value: &str) -> Result<Self, Error> {
         match Method::from_str(value) {
             Ok(m) => Ok(MethodMeta(m)),
-            Err(()) => {
+            Err(_) => {
                 // Special handling for paths that might be incorrectly parsed as methods
                 // This helps with rust-analyzer false positives for protect_* macros
                 if value.starts_with('/') {
@@ -197,14 +197,14 @@ fn parse_attr(name: &str, args: &[DarlingNestedMeta]) -> Result<Route, Error> {
     if let Some(method_str) = name.strip_prefix("protect_") {
         match Method::from_str(method_str) {
             Ok(method) => parse_method_route_attr(method, args),
-            Err(()) => Err(Error::unsupported_format(&format!(
+            Err(_) => Err(Error::unsupported_format(&format!(
                 "Unknown HTTP method in protect macro: '{method_str}'"
             ))),
         }
     } else {
         match Method::from_str(name) {
             Ok(method) => parse_method_route_attr(method, args),
-            Err(()) => parse_route_attr(args),
+            Err(_) => parse_route_attr(args),
         }
     }
 }
@@ -327,7 +327,7 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
                     data_param: data_param.map(trim_angle_brackers),
                 })
             }
-            Err(()) => Err(Error::unsupported_format(&format!(
+            Err(_) => Err(Error::unsupported_format(&format!(
                 "Unknown HTTP method in protect macro: '{method}'"
             ))),
         }
@@ -352,7 +352,7 @@ fn parse_attr_from_attr(attr: &Attribute) -> Result<Route, Error> {
                     data_param: data_param.map(trim_angle_brackers),
                 })
             }
-            Err(()) => Err(Error::unsupported_format(&format!(
+            Err(_) => Err(Error::unsupported_format(&format!(
                 "Unknown HTTP method: '{name}'"
             ))),
         }

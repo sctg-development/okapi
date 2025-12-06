@@ -1,4 +1,5 @@
 use rocket::{Build, Rocket};
+use tracing_subscriber::EnvFilter;
 use rocket_okapi::okapi::openapi3::OpenApi;
 use rocket_okapi::settings::UrlObject;
 use rocket_okapi::{mount_endpoints_and_merged_docs, rapidoc::*, swagger_ui::*};
@@ -13,6 +14,10 @@ pub type DataResult<'a, T> =
 
 #[rocket::main]
 async fn main() {
+    // Initialize tracing subscriber so `RUST_LOG` controls the logging output.
+    // Default to `info` if `RUST_LOG` is not set.
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
     let launch_result = create_server().launch().await;
     match launch_result {
         Ok(_) => println!("Rocket shut down gracefully."),

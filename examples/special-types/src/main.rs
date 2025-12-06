@@ -6,6 +6,7 @@ use rocket_okapi::{openapi, openapi_get_routes, rapidoc::*, swagger_ui::*};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use tracing_subscriber::EnvFilter;
 
 /// # Get data
 #[openapi(tag = "Users")]
@@ -43,6 +44,9 @@ pub struct ErrorMessage {
 
 #[rocket::main]
 async fn main() {
+    // Initialize tracing subscriber so RUST_LOG controls logging
+    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
     let launch_result = rocket::build()
         .mount("/", openapi_get_routes![get_data, path_info, create_user])
         .mount(

@@ -100,8 +100,8 @@ fn test_box_and_vec_and_slice_wrapper() {
 #[test]
 fn test_either_and_content_type_wrappers() {
     let mut gen = OpenApiGenerator::new(&OpenApiSettings::new());
-    let re =
-        <rocket::Either<String, Vec<u8>> as OpenApiResponderInner>::responses(&mut gen).unwrap();
+    let re = <std::result::Result<String, Vec<u8>> as OpenApiResponderInner>::responses(&mut gen)
+        .unwrap();
     assert!(re.responses.contains_key("200"));
     // Test content type wrapper: (ContentType, R)
     let rct = <(rocket::http::ContentType, String) as OpenApiResponderInner>::responses(&mut gen)

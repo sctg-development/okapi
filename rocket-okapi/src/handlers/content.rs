@@ -1,5 +1,5 @@
-use rocket::http::{ContentType, Method, Status};
-use rocket::response::Responder;
+use rocket::http::{ContentType, Method};
+use rocket::response::{Redirect, Responder};
 use rocket::route::{Handler, Outcome};
 use rocket::{Data, Request, Route};
 
@@ -53,10 +53,13 @@ impl<R> Handler for ContentHandler<R>
 where
     R: AsRef<[u8]> + Clone + Send + Sync + 'static,
 {
-    async fn handle<'r>(&self, req: &'r Request<'_>, data: Data<'r>) -> Outcome<'r> {
+    async fn handle<'r>(&self, req: &'r Request<'_>, _data: Data<'r>) -> Outcome<'r> {
         // match e.g. "/index.html" but not "/index.html/"
         if req.uri().path().ends_with('/') {
-            Outcome::forward(data, Status::PermanentRedirect)
+            // Convert to string and trim the trailing slash to redirect to the non-slashed path
+            let path = req.uri().path().to_string();
+            let trimmed = path.trim_end_matches('/');
+            Outcome::from(req, Redirect::to(trimmed.to_string()))
         } else {
             let content: (_, Vec<u8>) = (self.content.0.clone(), self.content.1.as_ref().into());
             match content.respond_to(req) {
