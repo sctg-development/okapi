@@ -7,5 +7,12 @@ edition = "2021"
 [dependencies]
 rocket = { workspace = true }
 rocket_ws = { workspace = true }
-rocket_okapi = { path = "../../rocket-okapi", features = ["swagger", "rapidoc", "rocket_ws"] }
+rocket_okapi = { path = "../../rocket-okapi", features = [
+    "swagger",
+    "rapidoc",
+    "rocket_ws",
+] }
 serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = "1.0"

@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           cargo install cargo-tarpaulin
-          cargo tarpaulin --out Xml --output-dir . 
+          cargo tarpaulin --workspace --all-targets --out Xml --output-dir .
           ls -la cobertura.xml
 
       # Upload coverage to Codecov

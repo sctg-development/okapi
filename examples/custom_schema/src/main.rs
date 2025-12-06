@@ -135,7 +135,10 @@ fn custom_openapi_spec() -> OpenApi {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rocket::http::Status;
+    use rocket::local::asynchronous::Client;
     use rocket_okapi::openapi_get_spec;
+    use serde_json::Value;
 
     #[test]
     fn custom_spec_contains_home_path() {
@@ -149,5 +152,47 @@ mod tests {
         let settings = rocket_okapi::settings::OpenApiSettings::default();
         let spec = rocket_okapi::openapi_get_spec![settings: post::create_post, post::get_post];
         assert!(spec.paths.keys().any(|k| k.contains("/")));
+    }
+
+    async fn fetch_openapi_spec(client: &Client, path: &str) -> Value {
+        let response = client.get(path).dispatch().await;
+        assert_eq!(response.status(), Status::Ok);
+        let body = response.into_string().await.expect("body string");
+        serde_json::from_str(&body).expect("valid json")
+    }
+
+    #[rocket::async_test]
+    async fn server_provides_openapi_json_v1_and_routes_match() {
+        // Start the server using the factory from this example
+        let rocket = create_server();
+        let client = Client::tracked(rocket).await.expect("valid client");
+
+        // Request the generated OpenAPI JSON that the example mounts to /v1/openapi.json
+        let spec = fetch_openapi_spec(&client, "/v1/openapi.json").await;
+
+        // Quick sanity checks
+        assert!(spec["openapi"].is_string());
+        assert!(spec["paths"].is_object());
+
+        // Helper: checks that every documented path is present in Rocket's mounted routes
+        let paths = spec["paths"].as_object().unwrap();
+        for path in paths.keys() {
+            // If the path is from an external custom spec, it's valid in OpenAPI but not a Rocket route
+            if path.starts_with("/external") {
+                continue;
+            }
+            // Convert OpenAPI style path (e.g. /user/{id}) to Rocket style (/user/<id>)
+            let rocket_style = path.replace('{', "<").replace('}', ">");
+            let rocket_style_alt = rocket_style.replace('>', "..>");
+            let found = client.rocket().routes().any(|r| {
+                r.uri.to_string().contains(&rocket_style)
+                    || r.uri.to_string().contains(&rocket_style_alt)
+            });
+            assert!(
+                found,
+                "OpenApi path '{}' not found among Rocket routes",
+                path
+            );
+        }
     }
 }

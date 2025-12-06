@@ -125,13 +125,45 @@ fn custom_openapi_spec() -> OpenApi {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rocket_okapi::openapi_get_spec;
+    use rocket::http::Status;
+    use rocket::local::asynchronous::Client;
     use rocket_okapi::settings::OpenApiSettings;
+    use serde_json::Value;
 
     #[test]
     fn nested_api_spec_contains_paths() {
         let settings = OpenApiSettings::default();
         let (_routes, spec) = api::get_routes_and_docs(&settings);
         assert!(spec.paths.keys().any(|k| k.contains("/")));
+    }
+
+    async fn fetch_openapi_spec(client: &Client, path: &str) -> Value {
+        let response = client.get(path).dispatch().await;
+        assert_eq!(response.status(), Status::Ok);
+        let body = response.into_string().await.expect("body string");
+        serde_json::from_str(&body).expect("valid json")
+    }
+
+    #[rocket::async_test]
+    async fn server_provides_v1_openapi_and_matches_routes() {
+        let rocket = create_server();
+        let client = Client::tracked(rocket).await.expect("client");
+        let spec = fetch_openapi_spec(&client, "/v1/openapi.json").await;
+        assert!(spec["paths"].is_object());
+        for path in spec["paths"].as_object().unwrap().keys() {
+            if path.starts_with("/external") {
+                continue;
+            }
+            let rocket_style = path.replace('{', "<").replace('}', ">");
+            let found = client
+                .rocket()
+                .routes()
+                .any(|r| r.uri.to_string().contains(&rocket_style));
+            assert!(
+                found,
+                "OpenApi path '{}' not found among Rocket routes",
+                path
+            );
+        }
     }
 }
